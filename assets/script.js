@@ -2,7 +2,7 @@ const calculator = {
     displayNumber: '0',
     operator: null,
     firstNumber: null,
-    secondNumber: false,
+    waitingForSecondNumber: false,
 }
 
 function updateDisplay(){
@@ -13,7 +13,7 @@ function clearCalculator(){
     calculator.displayNumber = '0';
     calculator.operator = null;
     calculator.firstNumber = null;
-    calculator.secondNumber = false;
+    calculator.waitingForSecondNumber = false;
 }
 
 function inputDigit(digit){
@@ -26,8 +26,46 @@ function inputDigit(digit){
 
 function inverseNumber(digit){
     if(calculator.displayNumber === "0"){
-        calculator.displayNumber -= digit;
+        return;
     }
+    calculator.displayNumber = calculator.displayNumber * -1;
+}
+
+function handleOperator(operator){
+    if(!calculator.waitingForSecondNumber){
+        calculator.operator = operator;
+        calculator.waitingForSecondNumber = true;
+        calculator.firstNumber = calculator.displayNumber;
+
+        calculator.displayNumber = '0';
+    } else {
+        alert('You can only use one operator per calculation');
+    }
+}
+
+function performCalculation(){
+    if(calculator.firstNumber == null || calculator.operator == null){
+        alert('You need to enter two numbers before you can use an operator');
+        return;
+    }
+
+    let result = 0;
+    if(calculator.operator == "+"){
+        result  = parseInt(calculator.firstNumber) + parseInt(calculator.displayNumber);
+    } else {
+        result = parseInt(calculator.firstNumber) - parseInt(calculator.displayNumber);
+    }
+
+    // objek yang akan dikirimkan sebagai argumen fungsi putHistory()
+   const history = {
+    firstNumber: calculator.firstNumber,
+    secondNumber: calculator.displayNumber,
+    operator: calculator.operator,
+    result: result
+}
+    putHistory(history);
+    calculator.displayNumber = result;
+    renderHistory();
 }
 
 const buttons = document.querySelectorAll('.button');
@@ -42,14 +80,24 @@ for(let button of buttons){
             return
         }
 
-        if(target.classList.contains('inverse')){
-            inverseNumber(1);
+        if(target.classList.contains('negative')) {
+            inverseNumber();
             updateDisplay();
-            return
+            return;
+        }
+  
+        if(target.classList.contains('equals')) {
+            performCalculation();
+            updateDisplay();
+            return;
+        }
+  
+        if(target.classList.contains('operator')) {
+            handleOperator(target.innerText);
+            return;
         }
 
         inputDigit(target.innerText);
         updateDisplay();
     });
 }
-
